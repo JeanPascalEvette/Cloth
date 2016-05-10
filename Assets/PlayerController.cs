@@ -15,9 +15,16 @@ public class PlayerController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        rb.velocity = new Vector3(
+
+        float depth = 0.0f;
+        if (Input.GetKey(KeyCode.Q))
+            depth = -1.0f;
+        else if (Input.GetKey(KeyCode.E))
+            depth = 1.0f;
+
+            rb.velocity = new Vector3(
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical"),
-            0) * Time.deltaTime * moveSpeed;
+            depth) * Time.deltaTime * moveSpeed;
 	}
 }

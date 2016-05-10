@@ -26,10 +26,15 @@ public class Cloth : MonoBehaviour
     [SerializeField]
     private GameObject ball;
 
+    [SerializeField]
+    private bool fourUnmovable = false;
+
 
     public float damping = 0.01f;
     public int constraintsIterations = 15;
 
+
+    int timeStepSkip = 0;
 
     // Use this for initialization
     void Start()
@@ -81,6 +86,19 @@ public class Cloth : MonoBehaviour
 
             getParticle(num_particles_width - 1 - i, 0).offsetPos(new Vector3(-0.5f, 0.0f, 0.0f)); // moving the particle a bit towards the center, to make it hang more natural - because I like it ;)
             getParticle(num_particles_width - 1 - i, 0).makeUnmovable();
+
+
+
+            if (fourUnmovable)
+            {
+                getParticle(0, num_particles_height - 1 - i).offsetPos(new Vector3(0.5f, 0.0f, 0.0f)); // moving the particle a bit towards the center, to make it hang more natural - because I like it ;)
+                getParticle(0, num_particles_height - 1 - i).makeUnmovable();
+
+
+
+                getParticle(num_particles_width - 1 - i, num_particles_height - 1 - i).offsetPos(new Vector3(-0.5f, 0.0f, 0.0f)); // moving the particle a bit towards the center, to make it hang more natural - because I like it ;)
+                getParticle(num_particles_width - 1 - i, num_particles_height - 1 - i).makeUnmovable();
+            }
         }
 
     }
@@ -88,8 +106,9 @@ public class Cloth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        addForce(new Vector3(0, -0.2f, 0) * (Time.deltaTime* Time.deltaTime)); // add gravity each frame, pointing down
-        windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime * Time.deltaTime)); // generate some wind each frame
+
+        addForce(new Vector3(0, -0.098f, 0) * (Time.deltaTime)); // add gravity each frame, pointing down
+        windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime)); // generate some wind each frame
 
         timeStep();
 
@@ -100,22 +119,33 @@ public class Cloth : MonoBehaviour
 
     void timeStep()
     {
+        for (int u = 0; u < constraints.Count; u++)
+        {
+
+            constraints[u].checkTear();
+             // checks value of cloth and tears.
+        }
         for (int i = 0; i < constraintsIterations; i++) // iterate over all constraints several times
         {
-            foreach (var constr in constraints)
+            for (int u = 0; u < constraints.Count; u++)
             {
-                constr.satisfyConstraint(); // satisfy constraint.
+                constraints[u].satisfyConstraint(); // satisfy constraint.
             }
         }
 
-        foreach (var particle in particles)
+        for (int u = 0; u < particles.Length; u++)
         {
-            particle.timeStep(); // calculate the position of each particle at the next time step.
+            particles[u].timeStep(); // calculate the position of each particle at the next time step.
         }
     }
 
     public Particle getParticle(int x, int y) { return particles[y * num_particles_width + x]; }
-    void makeConstraint(Particle p1, Particle p2) { constraints.Add(new Constraint(p1, p2)); }
+    void makeConstraint(Particle p1, Particle p2) {
+        var c = new Constraint(p1, p2);
+        constraints.Add(c);
+        p1.addConstraint(c);
+        p2.addConstraint(c);
+    }
 
 
 

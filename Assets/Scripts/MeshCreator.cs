@@ -76,28 +76,36 @@ public class MeshCreator : MonoBehaviour
         {
             for (int y = 0; y < cloth.num_particles_height - 1; y++)
             {
-                
-                vertices.Add(cloth.getParticle(x + 1, y).getPos());
-                normals.Add(cloth.getParticle(x + 1, y).getNormal().normalized);
-                indices.Add(index++);
-                vertices.Add(cloth.getParticle(x, y).getPos());
-                normals.Add(cloth.getParticle(x, y).getNormal().normalized);
-                indices.Add(index++);
-                vertices.Add(cloth.getParticle(x, y + 1).getPos());
-                normals.Add(cloth.getParticle(x, y + 1).getNormal().normalized);
-                indices.Add(index++);
-                
-                
-                vertices.Add(cloth.getParticle(x + 1, y + 1).getPos());
-                normals.Add(cloth.getParticle(x + 1, y + 1).getNormal().normalized);
-                indices.Add(index++);
-                vertices.Add(cloth.getParticle(x + 1, y).getPos());
-                normals.Add(cloth.getParticle(x + 1, y).getNormal().normalized);
-                indices.Add(index++);
-                vertices.Add(cloth.getParticle(x, y + 1).getPos());
-                normals.Add(cloth.getParticle(x, y + 1).getNormal().normalized);
-                indices.Add(index++);
+                Particle p1 = cloth.getParticle(x + 1, y);
+                Particle p2 = cloth.getParticle(x, y);
+                Particle p3 = cloth.getParticle(x, y + 1);
+                Particle p4 = cloth.getParticle(x + 1, y + 1);
 
+                if (!p1.getIsConstraintTorn(p2) && !p1.getIsConstraintTorn(p3) && !p3.getIsConstraintTorn(p2))
+                {
+                    vertices.Add(p1.getPos());
+                    normals.Add(p1.getNormal().normalized);
+                    indices.Add(index++);
+                    vertices.Add(p2.getPos());
+                    normals.Add(p2.getNormal().normalized);
+                    indices.Add(index++);
+                    vertices.Add(p3.getPos());
+                    normals.Add(p3.getNormal().normalized);
+                    indices.Add(index++);
+                }
+
+                if (!p1.getIsConstraintTorn(p4) && !p1.getIsConstraintTorn(p3) && !p4.getIsConstraintTorn(p3))
+                {
+                    vertices.Add(p4.getPos());
+                    normals.Add(p4.getNormal().normalized);
+                    indices.Add(index++);
+                    vertices.Add(p1.getPos());
+                    normals.Add(p1.getNormal().normalized);
+                    indices.Add(index++); // p1
+                    vertices.Add(p3.getPos());
+                    normals.Add(p3.getNormal().normalized);
+                    indices.Add(index++); // p3
+                }
 
                 //index += 2;
                 

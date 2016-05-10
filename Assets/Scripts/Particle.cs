@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Particle
 {
@@ -12,6 +13,7 @@ public class Particle
     private Vector3 accumulated_normal;
 
     private Cloth parent;
+    private List<Constraint> constraints = new List<Constraint>();
 
     public Particle(Cloth _parent, Vector3 pos)
     {
@@ -24,11 +26,24 @@ public class Particle
         accumulated_normal = Vector3.zero;
     }
 
+    public void addConstraint(Constraint c)
+    {
+        constraints.Add(c);
+    }
+
+    public bool getIsConstraintTorn(Particle p)
+    {
+        foreach (var c in constraints)
+            if (c.checkTornFromParticle(p))
+                return true;
+        return false;
+    }
 
     public void addForce(Vector3 f)
     {
         acceleration += f / mass;
     }
+    
 
     /* This is one of the important methods, where the time is progressed a single step size (TIME_STEPSIZE)
 	   The method is called by Cloth.time_step()
@@ -38,7 +53,7 @@ public class Particle
         if (movable)
         {
             Vector3 temp = position;
-            position = position + (position - previous_position) * (1.0f - parent.damping) + acceleration * (Time.deltaTime*Time.deltaTime);
+            position = position + (position - previous_position) * (1.0f - parent.damping) + acceleration;// * (Time.deltaTime);
             previous_position = temp;
             acceleration = Vector3.zero; // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)	
         }
