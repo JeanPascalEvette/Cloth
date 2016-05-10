@@ -34,6 +34,9 @@ public class Cloth : MonoBehaviour
     public int constraintsIterations = 15;
 
 
+    public Vector3 movementForce = Vector3.zero;
+
+
     int timeStepSkip = 0;
 
     // Use this for initialization
@@ -108,12 +111,13 @@ public class Cloth : MonoBehaviour
     {
 
         addForce(new Vector3(0, -0.098f, 0) * (Time.deltaTime)); // add gravity each frame, pointing down
-        windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime)); // generate some wind each frame
+        addForce(movementForce * Time.deltaTime);
+        //windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime)); // generate some wind each frame
 
         timeStep();
 
 
-        ballCollision(ball.transform.position, ball.transform.localScale.x); // resolve collision with the ball
+        ballCollision(ball.transform.localPosition - transform.localPosition, ball.transform.localScale.x * 0.5f); // resolve collision with the ball
     }
     
 
@@ -188,11 +192,13 @@ public class Cloth : MonoBehaviour
     {
         foreach (var particle in particles)
         {
-            Vector3 v = particle.getPos() - center;
-            float l = v.magnitude;
+            var partPos = particle.getPos() + transform.position;
+            Vector3 v = partPos - center;
+            float length = v.magnitude;
             if (v.magnitude < radius) // if the particle is inside the ball
             {
-                particle.offsetPos(v.normalized * (radius - l)); // project the particle to the surface of the ball
+                Debug.DrawLine(center, partPos, Color.red);
+                particle.offsetPos(v.normalized * (radius - length)); // project the particle to the surface of the ball
             }
         }
     }

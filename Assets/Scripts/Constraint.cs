@@ -49,7 +49,7 @@ public class Constraint {
     {
         Vector3 p1_to_p2 = p2.getPos() - p1.getPos(); // vector from p1 to p2
 
-        if (Mathf.Abs(p1_to_p2.magnitude - rest_distance) > 0.5f)
+        if (Mathf.Abs(p1_to_p2.magnitude - rest_distance) > 1.0f)
         {
             //p1.SetTorn();
             //p2.SetTorn();
