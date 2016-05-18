@@ -27,12 +27,35 @@ public class Constraint {
         return isTorn && ( p1 == target || p2 == target);
     }
 
+    public Particle GetOtherParticle(Particle p)
+    {
+        if (p == p1) return p2;
+        if (p == p2) return p1;
+        return null;
+    }
+
+    public Vector3[] GetPositions()
+    {
+        return new Vector3[] { p1.getPos(), p2.getPos() };
+    }
+
+    public bool IsConstraintDead()
+    {
+        return p1.deadParticle || p2.deadParticle || isTorn;
+    }
 
     /* This is one of the important methods, where a single constraint between two particles p1 and p2 is solved
 	the method is called by Cloth.time_step() many times per frame*/
-    public void satisfyConstraint()
+    public void satisfyConstraint(bool debug = false)
     {
-        if (isTorn) return;
+        if (p1.deadParticle || p2.deadParticle)
+            return;
+        if (isTorn)
+        {
+            if(debug)
+                Debug.DrawLine(p1.getPos(), p2.getPos(), Color.red);
+            return;
+        }
         Vector3 p1_to_p2 = p2.getPos() - p1.getPos(); // vector from p1 to p2
 
         if (Mathf.Abs(p1_to_p2.magnitude - rest_distance) < 0.005f) return;
@@ -43,10 +66,15 @@ public class Constraint {
         Vector3 correctionVectorHalf = correctionVector * 0.5f; // Lets make it half that length, so that we can move BOTH p1 and p2.
         p1.offsetPos(correctionVectorHalf); // correctionVectorHalf is pointing from p1 to p2, so the length should move p1 half the length needed to satisfy the constraint.
         p2.offsetPos(-correctionVectorHalf); // we must move p2 the negative direction of correctionVectorHalf since it points from p2 to p1, and not p1 to p2.	
+        if(debug)
+            Debug.DrawLine(p1.getPos(), p2.getPos(), Color.green);
     }
 
     public void checkTear()
     {
+        if (isTorn || p1.deadParticle || p2.deadParticle)
+            return;
+
         Vector3 p1_to_p2 = p2.getPos() - p1.getPos(); // vector from p1 to p2
 
         if (Mathf.Abs(p1_to_p2.magnitude - rest_distance) > 1.0f)
@@ -57,5 +85,10 @@ public class Constraint {
             //p1.resetAcceleration();
             //p2.resetAcceleration();
         }
+    }
+
+    public void tearConstraint()
+    {
+        isTorn = true;
     }
 }

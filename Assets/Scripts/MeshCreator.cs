@@ -14,6 +14,11 @@ public class MeshCreator : MonoBehaviour
 
     public MeshFilter viewMeshFilter;
     Mesh viewMesh;
+    GameObject meshChild;
+    public MeshFilter viewMeshFilterStrings;
+    Mesh viewMeshStrings;
+    GameObject meshChildStrings;
+    
 
     // Use this for initialization
     void Start()
@@ -23,10 +28,12 @@ public class MeshCreator : MonoBehaviour
 
         viewMesh = new Mesh();
         viewMesh.name = "View Mesh";
+        viewMeshStrings = new Mesh();
+        viewMeshStrings.name = "View Mesh Strings";
 
         if (viewMeshFilter == null)
         {
-            GameObject meshChild = new GameObject("Mesh");
+            meshChild = new GameObject("Mesh");
             meshChild.transform.parent = transform;
             meshChild.transform.localPosition = Vector3.zero;
             meshChild.transform.localRotation = Quaternion.identity;
@@ -37,9 +44,29 @@ public class MeshCreator : MonoBehaviour
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.sharedMaterial = (Material)Resources.Load("Materials/Cloth");
             viewMeshFilter = vmf;
+            col.sharedMesh = viewMesh;
         }
 
         viewMeshFilter.mesh = viewMesh;
+
+
+        if (viewMeshFilterStrings == null)
+        {
+            meshChildStrings = new GameObject("MeshStrings");
+            meshChildStrings.transform.parent = transform;
+            meshChildStrings.transform.localPosition = Vector3.zero;
+            meshChildStrings.transform.localRotation = Quaternion.identity;
+            var vmf = meshChildStrings.AddComponent<MeshFilter>();
+            var mr = meshChildStrings.AddComponent<MeshRenderer>();
+            var col = meshChildStrings.AddComponent<MeshCollider>();
+            mr.receiveShadows = false;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.sharedMaterial = (Material)Resources.Load("Materials/Strings");
+            viewMeshFilterStrings = vmf;
+            col.sharedMesh = viewMeshStrings;
+        }
+
+        viewMeshFilterStrings.mesh = viewMeshStrings;
 
     }
 
@@ -54,6 +81,8 @@ public class MeshCreator : MonoBehaviour
         {
             particle.resetNormal();
         }
+
+
 
         for (int x = 0; x < cloth.num_particles_width - 1; x++)
         {
@@ -117,8 +146,35 @@ public class MeshCreator : MonoBehaviour
         viewMesh.vertices = vertices.ToArray();
         viewMesh.triangles = indices.ToArray();
         viewMesh.normals = normals.ToArray();
+        meshChild.GetComponent<MeshCollider>().sharedMesh = viewMesh;
 
 
+        viewMeshStrings.Clear();
+        if (cloth.areStringsDrawn)
+            DrawStrings();
+    }
+
+
+    void DrawStrings()
+    {
+
+        int index = 0;
+
+        for (int i = 0; i < cloth.constraints.Count; i++)
+        {
+            if (cloth.constraints[i].IsConstraintDead())
+                continue;
+            vertices.Add(cloth.constraints[i].GetPositions()[0]);
+            vertices.Add(cloth.constraints[i].GetPositions()[1]);
+            indices.Add(index++);
+            indices.Add(index++);
+        }
+
+
+        viewMeshStrings.Clear();
+        viewMeshStrings.vertices = vertices.ToArray();
+        viewMeshStrings.SetIndices(indices.ToArray(), MeshTopology.Lines, 0);
+        viewMeshStrings.RecalculateBounds();
     }
 
 

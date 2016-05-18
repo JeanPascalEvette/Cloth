@@ -4,12 +4,18 @@ using System.Collections.Generic;
 
 public class Cloth : MonoBehaviour
 {
+    [SerializeField]
+    private bool debugModeConstraints;
+    [SerializeField]
+    public bool areStringsDrawn;
+    
+
 
     private List<Vector3> triangles = new List<Vector3>();
     private List<int> indices = new List<int>();
 
     public Particle[] particles;
-    private List<Constraint> constraints = new List<Constraint>();
+    public List<Constraint> constraints = new List<Constraint>();
 
     [SerializeField]
     public int num_particles_width; // number of particles in "width" direction
@@ -36,6 +42,7 @@ public class Cloth : MonoBehaviour
 
     public Vector3 movementForce = Vector3.zero;
 
+    private Vector3 lastHit = Vector3.zero;
 
     int timeStepSkip = 0;
 
@@ -112,14 +119,70 @@ public class Cloth : MonoBehaviour
 
         addForce(new Vector3(0, -0.098f, 0) * (Time.deltaTime)); // add gravity each frame, pointing down
         addForce(movementForce * Time.deltaTime);
-        //windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime)); // generate some wind each frame
+        windForce(new Vector3(0.5f, 0, 0.3f) * (Time.deltaTime)); // generate some wind each frame
 
         timeStep();
 
 
-        ballCollision(ball.transform.localPosition - transform.localPosition, ball.transform.localScale.x * 0.5f); // resolve collision with the ball
+        ballCollision(ball.transform.localPosition - transform.localPosition, ball.transform.localScale.x); // resolve collision with the ball
+
+        HandleInputs();
     }
     
+
+    void HandleInputs()
+    {
+        if(Input.GetKey(KeyCode.Mouse0))
+        {
+            Vector3 dir = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, Camera.main.transform.position.z));
+            Ray rayClick = new Ray(Camera.main.transform.position, dir - Camera.main.transform.position);
+
+            Debug.DrawRay(rayClick.origin, rayClick.direction * 50f, Color.cyan);
+            RaycastHit hitInfo;
+            if(Physics.Raycast(rayClick, out hitInfo, 100.0f))
+            {
+                lastHit = hitInfo.point;
+
+                Particle closestPar = getParticle(0, 0);
+                float smallestDist = float.MaxValue;
+                int _x = 0;
+                int _y = 0;
+                for (int x = 0; x < num_particles_width; x++)
+                {
+                    for (int y = 0; y < num_particles_height; y++)
+                    {
+                        if (smallestDist > Vector3.Distance(getParticle(x, y).getPos(), hitInfo.point))
+                        {
+                            smallestDist = Vector3.Distance(getParticle(x, y).getPos(), hitInfo.point);
+                            closestPar = getParticle(x, y);
+                            _x = x;
+                            _y = y;
+                        }
+                    }
+                }
+
+                closestPar.tearConstraints(_x, _y);
+                
+                        
+            }
+        }
+    }
+    
+
+    public void ripCloth(int num = -1)
+    {
+        float max = num_particles_height;
+        if (num != -1)
+            max = num;
+
+        for(int i = 0; i < max; i++)
+        {
+            getParticle(num_particles_width / 2, i).tearConstraints(num_particles_width / 2, i);
+            getParticle(num_particles_width / 2 + 1, i).tearConstraints(num_particles_width / 2 + 1, i);
+            getParticle(num_particles_width / 2 - 1, i).tearConstraints(num_particles_width / 2 - 1, i);
+
+        }
+    }
 
     void timeStep()
     {
@@ -133,7 +196,7 @@ public class Cloth : MonoBehaviour
         {
             for (int u = 0; u < constraints.Count; u++)
             {
-                constraints[u].satisfyConstraint(); // satisfy constraint.
+                constraints[u].satisfyConstraint(debugModeConstraints); // satisfy constraint.
             }
         }
 

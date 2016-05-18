@@ -15,6 +15,8 @@ public class Particle
     private Cloth parent;
     private List<Constraint> constraints = new List<Constraint>();
 
+    public bool deadParticle { get; private set; }
+
     public Particle(Cloth _parent, Vector3 pos)
     {
         parent = _parent;
@@ -23,6 +25,7 @@ public class Particle
         acceleration = Vector3.zero;
         mass = 1;
         movable = true;
+        deadParticle = false;
         accumulated_normal = Vector3.zero;
     }
 
@@ -50,15 +53,34 @@ public class Particle
 	   Given the equation "force = mass * acceleration" the next position is found through verlet integration*/
     public void timeStep()
     {
-        if (movable)
+        if (movable && !deadParticle)
         {
             Vector3 temp = position;
             position = position + (position - previous_position) * (1.0f - parent.damping) + acceleration;// * (Time.deltaTime);
             previous_position = temp;
-            acceleration = Vector3.zero; // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)	
+            acceleration = Vector3.zero; // acceleration is reset since it HAS been translated into a change in position (and implicitely into velocity)
+
+            int aliveConstraints = 0;
+            foreach (Constraint c in constraints)
+                if (c.isTorn == false)
+                    aliveConstraints++;
+            if (aliveConstraints == 0)
+                deadParticle = true;
+
+
         }
     }
 
+
+    public void tearConstraints(int x, int y)
+    {
+        foreach (Constraint c in constraints)
+        {
+            //if(c.GetOtherParticle(this) == parent.getParticle(x, y + 1) ||
+            //    c.GetOtherParticle(this) == parent.getParticle(x, y - 1))
+            c.tearConstraint();
+        }
+    }
 
 
     public Vector3 getPos() { return position; }

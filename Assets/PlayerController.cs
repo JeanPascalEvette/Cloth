@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour {
 
     [SerializeField]
     private float moveSpeed = 1.0f;
+    [SerializeField]
+    private float depthSpeed = 3.0f;
 
 	// Use this for initialization
 	void Start () {
@@ -25,6 +27,6 @@ public class PlayerController : MonoBehaviour {
             rb.velocity = new Vector3(
             Input.GetAxisRaw("Horizontal"),
             Input.GetAxisRaw("Vertical"),
-            depth) * Time.deltaTime * moveSpeed;
+            depth * depthSpeed / moveSpeed) * Time.deltaTime * moveSpeed;
 	}
 }
